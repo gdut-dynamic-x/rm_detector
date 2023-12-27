@@ -53,42 +53,42 @@ void Detector::onInit()
   roi_data_pub6_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data6_name_, 1);
   roi_data_pub7_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data7_name_, 1);
 
-  roi_data_pub_vec.push_back(roi_data_pub1_);
-  roi_data_pub_vec.push_back(roi_data_pub2_);
-  roi_data_pub_vec.push_back(roi_data_pub3_);
-  roi_data_pub_vec.push_back(roi_data_pub4_);
-  roi_data_pub_vec.push_back(roi_data_pub5_);
-  roi_data_pub_vec.push_back(roi_data_pub6_);
-  roi_data_pub_vec.push_back(roi_data_pub7_);
+  roi_data_pub_vec_.push_back(roi_data_pub1_);
+  roi_data_pub_vec_.push_back(roi_data_pub2_);
+  roi_data_pub_vec_.push_back(roi_data_pub3_);
+  roi_data_pub_vec_.push_back(roi_data_pub4_);
+  roi_data_pub_vec_.push_back(roi_data_pub5_);
+  roi_data_pub_vec_.push_back(roi_data_pub6_);
+  roi_data_pub_vec_.push_back(roi_data_pub7_);
 }
 
 void Detector::receiveFromCam(const sensor_msgs::CompressedImageConstPtr& image)
 {
   //    auto start = std::chrono::system_clock::now();
-  cv_bridge::CvImagePtr cv_image_ = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
+  cv_image_ = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
 
-  carInferencer.detect(cv_image_->image);
-  if (!carInferencer.target_objects.empty())
+  car_inferencer_.detect(cv_image_->image);
+  if (!car_inferencer_.target_objects.empty())
   {
-    for (auto& object : carInferencer.target_objects)
+    for (auto& object : car_inferencer_.target_objects)
     {
       cv::Mat armor_cls_image = cv_image_->image(get_rect(cv_image_->image, object.bbox)).clone();
 
-      armorInferencer.detect(armor_cls_image);
-      if (armorInferencer.target_objects.empty())
+      armor_inferencer_.detect(armor_cls_image);
+      if (armor_inferencer_.target_objects.empty())
         continue;
-      object.class_id = armorInferencer.target_objects[0].class_id;
+      object.class_id = armor_inferencer_.target_objects[0].class_id;
 
-      select_objects.push_back(object);
+      select_objects_.push_back(object);
     }
     if (turn_on_image_)
     {
-      draw_bbox(cv_image_->image, select_objects);
+      draw_bbox(cv_image_->image, select_objects_);
       camera_pub_.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", cv_image_->image).toImageMsg());
     }
-    if (!select_objects.empty())
+    if (!select_objects_.empty())
       publicMsg();
-    select_objects.clear();
+    select_objects_.clear();
     //        auto end = std::chrono::system_clock::now();
     //        ROS_INFO("inference time: %ld ms",std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
@@ -96,10 +96,10 @@ void Detector::receiveFromCam(const sensor_msgs::CompressedImageConstPtr& image)
 
 void Detector::dynamicCallback(rm_detector::dynamicConfig& config)
 {
-  carInferencer.conf_thresh_ = config.g_conf_thresh;
-  carInferencer.nms_thresh_ = config.g_nms_thresh;
-  armorInferencer.conf_thresh_ = config.g_conf_thresh2;
-  armorInferencer.nms_thresh_ = config.g_nms_thresh2;
+  car_inferencer_.conf_thresh_ = config.g_conf_thresh;
+  car_inferencer_.nms_thresh_ = config.g_nms_thresh;
+  armor_inferencer_.conf_thresh_ = config.g_conf_thresh2;
+  armor_inferencer_.nms_thresh_ = config.g_nms_thresh2;
   turn_on_image_ = config.g_turn_on_image;
   target_is_blue_ = config.target_is_blue;
   ROS_INFO("Settings have been seted");
@@ -108,8 +108,8 @@ void Detector::dynamicCallback(rm_detector::dynamicConfig& config)
 void Detector::initalizeInfer()
 {
   cudaSetDevice(kGpuId);
-  carInferencer.init(car_model_path_, gLogger_);
-  armorInferencer.init(armor_model_path_, gLogger_);
+  car_inferencer_.init(car_model_path_, gLogger_);
+  armor_inferencer_.init(armor_model_path_, gLogger_);
 }
 
 Detector::~Detector()
@@ -128,12 +128,12 @@ void Detector::publicMsg()
     target = { 6, 7, 8, 9, 10, 11, 5 };
   }
 
-  int car_size = select_objects.size();
+  int car_size = select_objects_.size();
 
   for (size_t i = 0; i < car_size; i++)
   {
     std::vector<int>::iterator iter;
-    iter = std::find(target.begin(), target.end(), select_objects[i].class_id);
+    iter = std::find(target.begin(), target.end(), select_objects_[i].class_id);
     if (iter == target.end())
     {
       continue;
@@ -143,7 +143,7 @@ void Detector::publicMsg()
     roi_point_vec_.clear();
     roi_data_.data.clear();
 
-    float* box = select_objects[i].bbox;
+    float* box = select_objects_[i].bbox;
 
     roi_data_point_l_.x = box[0] - box[2] / 2;
     roi_data_point_l_.y = box[1] - box[3] / 2;
@@ -158,7 +158,7 @@ void Detector::publicMsg()
     roi_data_.data.push_back(roi_point_vec_[1].x);
     roi_data_.data.push_back(roi_point_vec_[1].y);
 
-    roi_data_pub_vec[index].publish(roi_data_);
+    roi_data_pub_vec_[index].publish(roi_data_);
   }
 }
 }  // namespace rm_detector

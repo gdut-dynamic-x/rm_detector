@@ -54,21 +54,21 @@ public:
   std::string camera_pub_name_;
   std::string nodelet_name_;
 
-  std::string roi_data1_name_;  //敌方英雄
-  std::string roi_data2_name_;  //敌方工程
-  std::string roi_data3_name_;  //敌方步兵
-  std::string roi_data4_name_;  //敌方步兵
-  std::string roi_data5_name_;  //敌方步兵
-  std::string roi_data6_name_;  //敌方烧饼
-  std::string roi_data7_name_;  //我方烧饼
+  std::string roi_data1_name_;  // hero
+  std::string roi_data2_name_;  // engineer
+  std::string roi_data3_name_;  // standard
+  std::string roi_data4_name_;  // standard
+  std::string roi_data5_name_;  // standard
+  std::string roi_data6_name_;  // sentry
+  std::string roi_data7_name_;  // our sentry
 
   bool target_is_blue_;
   bool left_camera_;
 
-  Inferencer carInferencer;
-  Inferencer armorInferencer;
+  Inferencer car_inferencer_;
+  Inferencer armor_inferencer_;
 
-  std::vector<Detection> select_objects;
+  std::vector<Detection> select_objects_;
 
   ros::NodeHandle nh_;
   Logger gLogger_;
@@ -78,7 +78,7 @@ private:
 
   ros::Subscriber camera_sub_;
 
-  std::vector<ros::Publisher> roi_data_pub_vec;
+  std::vector<ros::Publisher> roi_data_pub_vec_;
   ros::Publisher roi_data_pub1_;
   ros::Publisher roi_data_pub2_;
   ros::Publisher roi_data_pub3_;
