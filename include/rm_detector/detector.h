@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 #include <std_msgs/Float32MultiArray.h>
+#include "rm_msgs/RadarTargetDetectionArray.h"
+#include "rm_msgs/RadarTargetDetection.h"
 #include <dynamic_reconfigure/server.h>
 #include "rm_detector/dynamicConfig.h"
 #include <sensor_msgs/CameraInfo.h>
@@ -39,7 +41,6 @@ public:
 
   cv_bridge::CvImagePtr cv_image_;
 
-  std_msgs::Float32MultiArray roi_data_;
   std::vector<cv::Point2f> roi_point_vec_;
   cv::Point2f roi_data_point_r_;
   cv::Point2f roi_data_point_l_;
@@ -78,13 +79,8 @@ private:
 
   ros::Subscriber camera_sub_;
 
-  std::vector<ros::Publisher> roi_data_pub_vec_;
-  ros::Publisher roi_data_pub1_;
-  ros::Publisher roi_data_pub2_;
-  ros::Publisher roi_data_pub3_;
-  ros::Publisher roi_data_pub4_;
-  ros::Publisher roi_data_pub5_;
-  ros::Publisher roi_data_pub6_;
-  ros::Publisher roi_data_pub7_;
+  ros::Publisher roi_datas_pub_;
+
+  rm_msgs::RadarTargetDetectionArray roi_array_{};
 };
 }  // namespace rm_detector

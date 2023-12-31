@@ -20,13 +20,6 @@ void Detector::onInit()
   nh_.getParam("camera_pub_name", camera_pub_name_);
   nh_.getParam("nodelet_name", nodelet_name_);
 
-  nh_.getParam("roi_data1_name", roi_data1_name_);
-  nh_.getParam("roi_data2_name", roi_data2_name_);
-  nh_.getParam("roi_data3_name", roi_data3_name_);
-  nh_.getParam("roi_data4_name", roi_data4_name_);
-  nh_.getParam("roi_data5_name", roi_data5_name_);
-  nh_.getParam("roi_data6_name", roi_data6_name_);
-  nh_.getParam("roi_data7_name", roi_data7_name_);
   nh_.getParam("left_camera", left_camera_);
 
   initalizeInfer();
@@ -36,7 +29,7 @@ void Detector::onInit()
   callback_ = boost::bind(&Detector::dynamicCallback, this, _1);
   server_->setCallback(callback_);
 
-  if (left_camera_)
+  if (left_camera_)  // TODO: Should we use the subscribeCamera function to receive camera info?
     camera_sub_ =
         nh_.subscribe("/galaxy_camera/galaxy_camera_left/image_raw/compressed", 1, &Detector::receiveFromCam, this);
   else
@@ -45,21 +38,7 @@ void Detector::onInit()
 
   camera_pub_ = nh_.advertise<sensor_msgs::Image>(camera_pub_name_, 1);
 
-  roi_data_pub1_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data1_name_, 1);
-  roi_data_pub2_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data2_name_, 1);
-  roi_data_pub3_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data3_name_, 1);
-  roi_data_pub4_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data4_name_, 1);
-  roi_data_pub5_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data5_name_, 1);
-  roi_data_pub6_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data6_name_, 1);
-  roi_data_pub7_ = nh_.advertise<std_msgs::Float32MultiArray>(roi_data7_name_, 1);
-
-  roi_data_pub_vec_.push_back(roi_data_pub1_);
-  roi_data_pub_vec_.push_back(roi_data_pub2_);
-  roi_data_pub_vec_.push_back(roi_data_pub3_);
-  roi_data_pub_vec_.push_back(roi_data_pub4_);
-  roi_data_pub_vec_.push_back(roi_data_pub5_);
-  roi_data_pub_vec_.push_back(roi_data_pub6_);
-  roi_data_pub_vec_.push_back(roi_data_pub7_);
+  roi_datas_pub_ = nh_.advertise<rm_msgs::RadarTargetDetection>("rm_radar/roi_datas", 10);
 }
 
 void Detector::receiveFromCam(const sensor_msgs::CompressedImageConstPtr& image)
@@ -88,6 +67,12 @@ void Detector::receiveFromCam(const sensor_msgs::CompressedImageConstPtr& image)
     }
     if (!select_objects_.empty())
       publicMsg();
+    else  // if no select_objects, it'll send empty msg to lidar
+    {
+      roi_array_.header.stamp = ros::Time::now();  // TODO: Whether the timestamp in camera info should be sent hear
+      roi_array_.detections = {};
+      roi_datas_pub_.publish(roi_array_);
+    }
     select_objects_.clear();
     //        auto end = std::chrono::system_clock::now();
     //        ROS_INFO("inference time: %ld ms",std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
@@ -114,6 +99,7 @@ void Detector::initalizeInfer()
 
 Detector::~Detector()
 {
+  this->roi_array_.detections.clear();
 }
 
 void Detector::publicMsg()
@@ -130,6 +116,7 @@ void Detector::publicMsg()
 
   int car_size = select_objects_.size();
 
+  rm_msgs::RadarTargetDetection roi_data;
   for (size_t i = 0; i < car_size; i++)
   {
     std::vector<int>::iterator iter;
@@ -139,9 +126,9 @@ void Detector::publicMsg()
       continue;
     }
     auto index = std::distance(target.begin(), iter);
+    roi_data.id = index;
 
     roi_point_vec_.clear();
-    roi_data_.data.clear();
 
     float* box = select_objects_[i].bbox;
 
@@ -153,13 +140,14 @@ void Detector::publicMsg()
     roi_point_vec_.push_back(roi_data_point_l_);
     roi_point_vec_.push_back(roi_data_point_r_);
 
-    roi_data_.data.push_back(roi_point_vec_[0].x);
-    roi_data_.data.push_back(roi_point_vec_[0].y);
-    roi_data_.data.push_back(roi_point_vec_[1].x);
-    roi_data_.data.push_back(roi_point_vec_[1].y);
-
-    roi_data_pub_vec_[index].publish(roi_data_);
+    roi_data.position.data.push_back(roi_point_vec_[0].x);
+    roi_data.position.data.push_back(roi_point_vec_[0].y);
+    roi_data.position.data.push_back(roi_point_vec_[1].x);
+    roi_data.position.data.push_back(roi_point_vec_[1].y);
+    roi_array_.detections.emplace_back(roi_data);
   }
+  roi_array_.header.stamp = ros::Time::now();  // TODO: Whether the timestamp in camera info should be sent hear
+  roi_datas_pub_.publish(roi_array_);
 }
 }  // namespace rm_detector
 PLUGINLIB_EXPORT_CLASS(rm_detector::Detector, nodelet::Nodelet)

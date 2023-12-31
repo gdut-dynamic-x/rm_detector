@@ -24,6 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
         cv_bridge
         nodelet
         pluginlib
+        rm_msgs
         )
 #find_package(OpenCV REQUIRED)
 find_package(OpenCV 4 REQUIRED)

@@ -17,13 +17,6 @@
         <param name="g_armor_model_path"  type="string" value="$(find rm_detector)/docs/armor_det.engine"/>
         <param name="nodelet_name"  type="string" value="left_camera_proc"/>
         <param name="camera_pub_name"  type="string" value="left_armor_detector_image_publisher"/>
-        <param name="roi_data1_name"  type="string" value="roi_data1"/>
-        <param name="roi_data2_name"  type="string" value="roi_data2"/>
-        <param name="roi_data3_name"  type="string" value="roi_data3"/>
-        <param name="roi_data4_name"  type="string" value="roi_data4"/>
-        <param name="roi_data5_name"  type="string" value="roi_data5"/>
-        <param name="roi_data6_name"  type="string" value="roi_data6"/>
-        <param name="roi_data7_name"  type="string" value="roi_data7"/>
         <param name="target_is_blue"  type="bool" value="true"/>
         <!--      <rosparam command="load" file="$(find rm_detector)/config/camera.yaml" /> -->
     </node>
@@ -36,13 +29,6 @@
         <param name="g_armor_model_path"  type="string" value="$(find rm_detector)/docs/armor_det.engine"/>
         <param name="nodelet_name"  type="string" value="right_camera_proc"/>
         <param name="camera_pub_name"  type="string" value="right_armor_detector_image_publisher"/>
-        <param name="roi_data1_name"  type="string" value="roi_data1"/>
-        <param name="roi_data2_name"  type="string" value="roi_data2"/>
-        <param name="roi_data3_name"  type="string" value="roi_data3"/>
-        <param name="roi_data4_name"  type="string" value="roi_data4"/>
-        <param name="roi_data5_name"  type="string" value="roi_data5"/>
-        <param name="roi_data6_name"  type="string" value="roi_data6"/>
-        <param name="roi_data7_name"  type="string" value="roi_data7"/>
         <param name="target_is_blue"  type="bool" value="true"/>
         <!--       <rosparam command="load" file="$(find rm_detector)/config/camera.yaml" /> -->
     </node>
