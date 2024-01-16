@@ -21,7 +21,7 @@ Inferencer::~Inferencer()
   CUDA_CHECK(cudaFree(gpu_buffers_[0]));
   CUDA_CHECK(cudaFree(gpu_buffers_[1]));
   delete[] cpu_output_buffer_;
-  cudaProprecess_.cuda_preprocess_destroy();
+  cuda_preprocess_destroy();
   // Destroy the engine
   context_->destroy();
   engine_->destroy();
@@ -34,7 +34,7 @@ void Inferencer::init(std::string& engine_path, Logger& logger)
 
   deserialize_engine(engine_path, &runtime_, &engine_, &context_);
 
-  cudaProprecess_.cuda_preprocess_init(kMaxInputImageSize);
+  cuda_preprocess_init(kMaxInputImageSize);
 
   prepare_buffers(engine_, &gpu_buffers_[0], &gpu_buffers_[1], &cpu_output_buffer_);
 }
@@ -56,17 +56,17 @@ void Inferencer::prepare_buffers(ICudaEngine* engine, float** gpu_input_buffer, 
   *cpu_output_buffer = new float[kBatchSize * K_OUTPUT_SIZE];
 }
 
-void Inferencer::detect(Mat& frame)
+void Inferencer::detect(std::vector<Mat>& frame)
 {
-  target_objects.clear();
+  target_objects_.clear();
   cudaStream_t stream;
   CUDA_CHECK(cudaStreamCreate(&stream));
-  cudaProprecess_.cuda_batch_preprocess(frame, gpu_buffers_[0], kInputW, kInputH, stream);
+  cuda_batch_preprocess(frame, gpu_buffers_[0], kInputW, kInputH, stream);
 
   infer(*context_, stream, (void**)gpu_buffers_, cpu_output_buffer_, kBatchSize);
 
-  batch_nms(target_objects, cpu_output_buffer_, conf_thresh_, nms_thresh_);
-
+  batch_nms(target_objects_, cpu_output_buffer_, frame.size(), 1000 * sizeof(Detection) / sizeof(float) + 1,
+            conf_thresh_, nms_thresh_);
   cudaStreamDestroy(stream);
 }
 

@@ -44,9 +44,9 @@ include_directories("/opt/TensorRT-${TensorRT_VERSION}/include/")
 
 link_directories("/opt/TensorRT-${TensorRT_VERSION}/targets/x86_64-linux-gnu/lib/")
 
-file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/utils/*.cpp ${PROJECT_SOURCE_DIR}/utils/*.cu)
+file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/tools/*.cpp ${PROJECT_SOURCE_DIR}/tools/*.cu)
 
-file(GLOB_RECURSE PLUGIN_SRCS ./plugin/*.cu)
+file(GLOB PLUGIN_SRCS ./plugin/*.cu)
 
 add_library(network SHARED ${PLUGIN_SRCS})
 
@@ -61,8 +61,9 @@ target_link_libraries(TRTx network)
 
 include_directories(
         include
-        ./utils/
-        ./plugin/
+        # ./utils/
+        ./tools/
+        ./plugin
         ${catkin_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
 )
@@ -102,15 +103,15 @@ add_library(${PROJECT_NAME}
         )
 
 
-add_executable(get_engine src/get_engine.cpp)
+# add_executable(get_engine src/get_engine.cpp)
 
-target_link_libraries(get_engine
-        nvinfer
-        cudart
-        network
-        TRTx
-        ${OpenCV_LIBS}
-        )
+# target_link_libraries(get_engine
+#         nvinfer
+#         cudart
+#         network
+#         TRTx
+#         ${OpenCV_LIBS}
+#         )
 
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}

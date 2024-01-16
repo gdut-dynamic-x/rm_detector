@@ -65,6 +65,7 @@ public:
 
   bool target_is_blue_;
   bool left_camera_;
+  bool use_armor_detector_;
 
   Inferencer car_inferencer_;
   Inferencer armor_inferencer_;
@@ -75,6 +76,7 @@ public:
   Logger gLogger_;
 
 private:
+  cv::Mat ori_image_;
   ros::Publisher camera_pub_;
 
   ros::Subscriber camera_sub_;
