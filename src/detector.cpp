@@ -73,23 +73,10 @@ void Detector::receiveFromCam(const sensor_msgs::CompressedImageConstPtr& image)
         this->select_objects_.push_back(object);
       }
     }
-    if (!this->select_objects_.empty())
-    {
-      sent_msgs = true;
-      publicMsg();
-    }
     //        auto end = std::chrono::system_clock::now();
     //        ROS_INFO("inference time: %ld ms",std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
-  if (!sent_msgs)  // if no select_objects, it'll send empty msg to lidar
-  {
-    rm_msgs::RadarTargetDetection empty_msg;
-    empty_msg.id = 0;
-    empty_msg.position = {};
-    this->roi_array_.header.stamp = ros::Time::now();  // TODO: Whether the timestamp in camera info should be sent hear
-    this->roi_array_.detections = { empty_msg };
-    roi_datas_pub_.publish(this->roi_array_);
-  }
+  publicMsg();
   if (turn_on_image_)
   {
     std::vector<std::vector<Detection>> objects = { this->select_objects_ };
@@ -127,7 +114,8 @@ Detector::~Detector()
 }
 
 void Detector::publicMsg()
-{  // enemy is blue
+{
+  // enemy is blue
   std::vector<int> target;
   if (target_is_blue_)
   {
@@ -168,7 +156,7 @@ void Detector::publicMsg()
     this->roi_array_.detections.emplace_back(roi_data);
   }
   this->roi_array_.header.stamp = ros::Time::now();  // TODO: Whether the timestamp in camera info should be sent hear
-  roi_datas_pub_.publish(this->roi_array_);
+  roi_datas_pub_.publish(this->roi_array_);          // it will send empty msg when there are no currect targets.
 }
 }  // namespace rm_detector
 PLUGINLIB_EXPORT_CLASS(rm_detector::Detector, nodelet::Nodelet)
