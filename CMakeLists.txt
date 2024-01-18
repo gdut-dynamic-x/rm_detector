@@ -2,16 +2,17 @@ cmake_minimum_required(VERSION 3.10)
 project(rm_detector)
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-        set(CMAKE_CUDA_ARCHITECTURES 70 75 80)
+  set(CMAKE_CUDA_ARCHITECTURES 70 75 80)
 endif(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
 
 add_definitions(-std=c++11)
 add_definitions(-DAPI_EXPORTS)
-option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 
-# TODO(Call for PR): make cmake compatible with Windows
+# CUDA
+set(CUDA_VERSION "11.6")
+option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 enable_language(CUDA)
 
@@ -23,36 +24,54 @@ find_package(catkin REQUIRED COMPONENTS
         cv_bridge
         nodelet
         pluginlib
+        rm_msgs
         )
 #find_package(OpenCV REQUIRED)
 find_package(OpenCV 4 REQUIRED)
 
-
 include_directories(/usr/local/cuda/include)
+
 link_directories(/usr/local/cuda/lib64)
 
-include_directories(/opt/TensorRT-8.4.0.6/include/)
-link_directories(/opt/TensorRT-8.4.0.6/targets/x86_64-linux-gnu/lib/)
+# TensorRT
+set(TensorRT_VERSION "8.4.0.6")
 
-include_directories(./utils/)
-include_directories(./plugin/)
-file(GLOB_RECURSE SRCS ./utils/*.cpp ${PROJECT_SOURCE_DIR}/utils/*.cu)
+if (NOT EXISTS "/home/ywj/opt/TensorRT-${TensorRT_VERSION}")
+  MESSAGE(WARNING "/home/ywj/opt/TensorRT-${TensorRT_VERSION} not found.")
+endif()
+
+include_directories("/home/ywj/opt/TensorRT-${TensorRT_VERSION}/include/")
+
+link_directories("/home/ywj/opt/TensorRT-${TensorRT_VERSION}/targets/x86_64-linux-gnu/lib/")
+
+file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/utils/*.cpp ${PROJECT_SOURCE_DIR}/utils/*.cu)
+
 file(GLOB_RECURSE PLUGIN_SRCS ./plugin/*.cu)
 
-add_library(myplugins SHARED ${PLUGIN_SRCS})
-target_link_libraries(myplugins nvinfer cudart)
+add_library(network SHARED ${PLUGIN_SRCS})
 
-generate_dynamic_reconfigure_options(
-        cfg/dynamic.cfg
-)
+add_library(TRTx SHARED ${SRCS})
+
+target_link_libraries(network
+        nvinfer
+        cudart
+        )
+
+target_link_libraries(TRTx network)
 
 include_directories(
         include
+        ./utils/
+        ./plugin/
         ${catkin_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
 )
 
 link_directories(${OpenCV_LIBRARY_DIRS})
+
+generate_dynamic_reconfigure_options(
+        cfg/dynamic.cfg
+)
 
 catkin_package(
         INCLUDE_DIRS
@@ -67,17 +86,35 @@ catkin_package(
         LIBRARIES ${PROJECT_NAME}
 )
 
+if (NOT EXISTS "/usr/local/cuda-${CUDA_VERSION}/include")
+  MESSAGE(WARNING "/usr/local/cuda-${CUDA_VERSION}/include not found.")
+endif()
+
 include_directories(
         include
         ${catkin_INCLUDE_DIRS}
-        /usr/local/cuda-11.6/include
+        "/usr/local/cuda-${CUDA_VERSION}/include"
+        /usr/include/eigen3
 )
-## Declare a C++ library
-add_library(${PROJECT_NAME} src/detector.cpp
+
+add_library(${PROJECT_NAME}
+        src/detector.cpp
         src/inferencer.cpp
-        ${SRCS}
-        src/get_engine.cpp
+        src/rm_bytetrack/BYTETracker.cpp
+        src/rm_bytetrack/kalmanFilter.cpp
+        src/rm_bytetrack/lapjv.cpp
+        src/rm_bytetrack/STrack.cpp
 )
+
+add_executable(get_engine src/get_engine.cpp)
+
+target_link_libraries(get_engine
+        nvinfer
+        cudart
+        network
+        TRTx
+        ${OpenCV_LIBS}
+        )
 
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
@@ -87,19 +124,12 @@ target_link_libraries(${PROJECT_NAME}
         ${TENSORRT_LIB}
         ${CUDA_LIB}
         ${glog_LIB}
+        nvinfer
+        cudart
+        network
+        TRTx
         )
 
-
-target_link_libraries(rm_detector nvinfer)
-target_link_libraries(rm_detector cudart)
-target_link_libraries(rm_detector myplugins)
-target_link_libraries(rm_detector ${OpenCV_LIBS})
-
-add_executable(get_engine src/get_engine.cpp)
-target_link_libraries(get_engine nvinfer)
-target_link_libraries(get_engine cudart)
-target_link_libraries(get_engine myplugins)
-target_link_libraries(get_engine ${OpenCV_LIBS})
-
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
