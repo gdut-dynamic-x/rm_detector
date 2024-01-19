@@ -46,6 +46,7 @@ void Detector::receiveFromCam(const sensor_msgs::CompressedImageConstPtr& image)
   //    auto start = std::chrono::system_clock::now();
   cv_image_ = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
   this->ori_image_ = cv_image_->image.clone();
+  this->ori_image_size_ = { this->ori_image_.cols, this->ori_image_.rows };
 
   std::vector<cv::Mat> img_batch = { this->ori_image_ };
 
@@ -145,6 +146,15 @@ void Detector::publicMsg()
     roi_data_point_l_.y = box[1] - box[3] / 2;
     roi_data_point_r_.x = box[0] + box[2] / 2;
     roi_data_point_r_.y = box[1] + box[3] / 2;
+
+    if (roi_data_point_l_.x < 0)
+      roi_data_point_l_.x = 0.;
+    if (roi_data_point_l_.y < 0)
+      roi_data_point_l_.y = 0.;
+    if (roi_data_point_r_.x > this->ori_image_size_[0])
+      roi_data_point_r_.x = this->ori_image_size_[0];
+    if (roi_data_point_r_.y > this->ori_image_size_[1])
+      roi_data_point_r_.y = this->ori_image_size_[1];
 
     roi_point_vec_.push_back(roi_data_point_l_);
     roi_point_vec_.push_back(roi_data_point_r_);

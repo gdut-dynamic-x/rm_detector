@@ -9,18 +9,18 @@
     <arg name="camera_frame" default="camera_optical_frame"/>
 
     <!--     left_camera -->
-    <!-- <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/> -->
+    <node pkg="nodelet" type="nodelet" name="nodelet_manager"  args="manager" output="screen"/>
     <!-- nodelet'tag should follow obey the following format -->
 
-    <!-- <node pkg="nodelet" type="nodelet" name="left_camera_proc" args="load rm_detector/armor_detector nodelet_manager" output="screen" >
+    <node pkg="nodelet" type="nodelet" name="left_camera_proc" args="load rm_detector/armor_detector nodelet_manager" output="screen" >
         <param name="left_camera"  type="bool" value="true"/>
         <param name="g_car_model_path"  type="string" value="$(find rm_detector)/docs/yolov8/car_det.engine"/>
         <param name="g_armor_model_path"  type="string" value="$(find rm_detector)/docs/yolov8/armor_det.engine"/>
         <param name="nodelet_name"  type="string" value="left_camera_proc"/>
         <param name="camera_pub_name"  type="string" value="left_armor_detector_image_publisher"/>
-        <param name="target_is_blue"  type="bool" value="true"/> -->
+        <param name="target_is_blue"  type="bool" value="true"/>
              <!-- <rosparam command="load" file="$(find rm_detector)/config/camera.yaml" /> -->
-    <!-- </node> -->
+    </node>
     
  
     <!--     right_camera -->

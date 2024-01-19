@@ -77,6 +77,7 @@ public:
 
 private:
   cv::Mat ori_image_;
+  std::vector<int> ori_image_size_;
   ros::Publisher camera_pub_;
 
   ros::Subscriber camera_sub_;
