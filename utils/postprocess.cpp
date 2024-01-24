@@ -33,9 +33,9 @@ cv::Rect get_rect(cv::Mat& img, float bbox[4]) {
     if (rect.tl().y < 0)
         rect.y = 0;
     if (rect.br().x > img.cols)
-        rect.x = img.cols - rect.width - 1;
+        rect.width = img.cols - rect.x;
     if (rect.br().y > img.rows)
-        rect.y = img.rows - rect.height - 1;
+        rect.height = img.rows - rect.y;
 
     return rect;
 }
