@@ -111,7 +111,7 @@ void STrack::update(STrack& new_track, int frame_id)
   this->is_activated_ = true;
 
   this->score_ = new_track.score_;
-  if (this->track_class_id_ == -1)
+  if (new_track.track_class_id_ != -1)
   {
     this->track_class_id_ = new_track.track_class_id_;
   }
