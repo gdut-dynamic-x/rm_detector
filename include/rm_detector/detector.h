@@ -16,6 +16,7 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
+#include "NvOnnxParser.h"
 #include "rm_detector/inferencer.h"
 
 // static Logger gLogger_;
@@ -47,6 +48,8 @@ public:
 
   std::string car_model_path_;
   std::string armor_model_path_;
+  std::string class_armor_model_path_;
+  std::string armor_onnx_model_path_;
 
   bool turn_on_image_;
   dynamic_reconfigure::Server<rm_detector::dynamicConfig>* server_;
@@ -66,21 +69,32 @@ public:
   bool target_is_blue_;
   bool left_camera_;
   bool use_armor_detector_;
-
-  Inferencer car_inferencer_;
-  Inferencer armor_inferencer_;
+  bool use_class_model_;
 
   std::vector<Detection> select_objects_;
 
   ros::NodeHandle nh_;
-  Logger gLogger_;
+  Logger car_logger_;
+  Logger armor_logger_;
 
 private:
   cv::Mat ori_image_;
   std::vector<int> ori_image_size_;
   ros::Publisher camera_pub_;
+  bool is_initalized_ = false;
+  float car_conf_thresh_;
+  float car_nms_thresh_;
+  float armor_conf_thresh_;
+  float armor_nms_thresh_;
+  Inferencer car_inferencer_;
+  Inferencer armor_inferencer_;
+  ArmorInferencer armor_class_inferencer_;
+  int armor_model_input_h_;
+  int armor_model_input_w_;
 
   ros::Subscriber camera_sub_;
+
+  int id_ = 0;
 
   ros::Publisher roi_datas_pub_;
 

@@ -1,8 +1,8 @@
 #define USE_FP16
-//#define USE_INT8
+// #define USE_INT8
 
-const static char *kInputTensorName = "images";
-const static char *kOutputTensorName = "output";
+const static char* kInputTensorName = "images";
+const static char* kOutputTensorName = "output";
 const static int kNumClass = 12;
 const static int kBatchSize = 1;
 const static int kGpuId = 0;
