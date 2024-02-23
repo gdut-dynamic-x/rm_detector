@@ -103,6 +103,40 @@ void batch_nms(std::vector<std::vector<Detection>>& res_batch, float* output, in
   }
 }
 
+void get_output(std::vector<std::vector<Detection>>& res_batch, float* output, int batch_size, int output_size)
+{
+  for (int i = 0; i < batch_size; ++i)
+  {
+    float* index = output;
+    while (*index)
+    {
+      printf("%f\n", *index);
+      index++;
+    }
+    printf("end\n");
+    // printf("%d", output[0]);
+  }
+}
+
+std::vector<float> softmax(float* output)
+{
+  float total = 0.;
+  float* index = output;
+  while (*index)
+  {
+    total += exp(*index);
+    index++;
+  }
+  std::vector<float> result;
+  index = output;
+  while (*index)
+  {
+    result.push_back(exp(*index) / total);
+    index++;
+  }
+  return result;
+}
+
 void process_decode_ptr_host(std::vector<Detection>& res, const float* decode_ptr_host, int bbox_element, cv::Mat& img,
                              int count)
 {

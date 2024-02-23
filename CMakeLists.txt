@@ -125,6 +125,7 @@ target_link_libraries(${PROJECT_NAME}
         cudart
         network
         TRTx
+        nvonnxparser
         )
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
